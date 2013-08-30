@@ -54,22 +54,30 @@ abstract class Database {
    * @return mixxed
    */
   public static function execute( $query ){
+    if( !(bool)preg_match('/(^INSERT)|(^SELECT)|(^UPDATE)|(^DELETE).*/i', $query) )
+      return false;
     if( static::connect()!==true )
-      return false;   
-    // get results from $query
-    $result= mysqli_query( static::$db, $query ) or mysqli_connect_error();
+      return false;       
+    $result= mysqli_query( static::$db,$query );
     // check if any results are available
-    if( gettype($result)==="boolean" )
-      return $result;
-    if( mysqli_num_rows($result)==0 )
-      return '[]';
+    if( (bool)preg_match('/^INSERT.*/i', $query) ){
+      return mysqli_insert_id( static::$db);
+    } else if( (bool)preg_match('/^UPDATE.*/i', $query) ){
+      return mysqli_store_result( static::$db );
+    } else if( (bool)preg_match('/^DELETE.*/i', $query) ){
+      return mysqli_store_result( static::$db );
+    }
     // convert results into json format
     $rows = array();
-    while($row= mysqli_fetch_assoc($result)){
-      $rows[]= $row;
+    if( gettype($result)!=="boolean" ){
+      while($row= mysqli_fetch_assoc($result))
+        $rows[]= $row;
+      return empty($rows) ? false:json_encode($rows);
     }
-    return json_encode($rows);
+
+    return $result;
   }
+
 }
 
 ?>

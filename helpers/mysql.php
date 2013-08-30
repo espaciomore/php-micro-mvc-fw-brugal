@@ -40,7 +40,7 @@ class MySQL extends Database {
    * @return string(JSon)
    */
   public function read( $fields, $table, $filter=false ){
-    $query = 'SELECT '.$fields.' FROM '.$table.( $filter ? ' WHERE '.$filter.';':';');
+    $query = 'SELECT '.$fields.' FROM '.$table.( $filter!==false ? ' WHERE '.$filter.';':';');
     return self::execute( $query );
   }
 
@@ -52,7 +52,7 @@ class MySQL extends Database {
    * @return string(JSon)
    */
   public function update( $fields, $table, $filter=false ){
-    $query = 'UPDATE '.$table.' SET '.$fields.( $filter ? ' WHERE '.$filter.';':';');
+    $query = 'UPDATE '.$table.' SET '.$fields.( $filter!==false ? ' WHERE '.$filter.';':';');
     return self::execute( $query );
   }
 
@@ -63,7 +63,7 @@ class MySQL extends Database {
    * @return boolean
    */
   public function delete( $table, $filter=false ){
-    $query = 'DELETE FROM '.$table.( $filter ? ' WHERE '.$filter.';':';');
+    $query = 'DELETE FROM '.$table.( $filter!==false ? ' WHERE '.$filter.';':';');
     return self::execute( $query );
   }
 
