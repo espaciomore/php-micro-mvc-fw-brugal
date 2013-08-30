@@ -1,0 +1,1 @@
+<?php echo isset(self::$data)?self::$data:''; ?> Hello World !
