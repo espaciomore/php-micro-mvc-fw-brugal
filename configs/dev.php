@@ -31,7 +31,7 @@ abstract class Dev {
     // environment memory usage
     $current_memory_limit = get_cfg_var('memory_limit');
     $memory_limit = '128M';
-    /static::$messages[] = ( ini_set('memory_limit', $memory_limit) ? 'Memory Limit: '.$memory_limit:'Memory Limit: '.$current_memory_limit );
+    static::$messages[] = ( ini_set('memory_limit', $memory_limit) ? 'Memory Limit: '.$memory_limit:'Memory Limit: '.$current_memory_limit );
     // environment runtime vars
     $current_max_execution_time = get_cfg_var('max_execution_time');
     $max_execution_time = 120;
