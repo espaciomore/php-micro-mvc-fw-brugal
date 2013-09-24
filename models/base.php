@@ -6,7 +6,7 @@ namespace Models;
  * Base Class is the parent class for every model.
  *
  * By creating a model object one can implement the logic
- * for retrieving data from Cake API.
+ * for retrieving data from API.
  */
 abstract class Base {
 
