@@ -40,8 +40,12 @@ class MySQL extends Database {
    * @return string(JSon)
    */
   public function read( $fields, $table, $filter=false ){
-    $query = 'SELECT '.$fields.' FROM '.$table.( $filter!==false ? ' WHERE '.$filter.';':';');
-    return self::execute( $query );
+    $query = 'SELECT /* SQL_NO_CACHE */ '.$fields.' FROM '.$table.( $filter!==false ? ' '.$filter.';':';');
+    $result= self::execute( $query );
+    if( (bool)preg_match('/^SELECT \/\* SQL_NO_CACHE \*\/ COUNT.*/i', $query) ){
+      return $result[0]['count'];
+    }
+    return $result;
   }
 
   /**
@@ -52,7 +56,7 @@ class MySQL extends Database {
    * @return string(JSon)
    */
   public function update( $fields, $table, $filter=false ){
-    $query = 'UPDATE '.$table.' SET '.$fields.( $filter!==false ? ' WHERE '.$filter.';':';');
+    $query = 'UPDATE '.$table.' SET '.$fields.( $filter!==false ? ' '.$filter.';':';');
     return self::execute( $query );
   }
 
@@ -63,7 +67,7 @@ class MySQL extends Database {
    * @return boolean
    */
   public function delete( $table, $filter=false ){
-    $query = 'DELETE FROM '.$table.( $filter!==false ? ' WHERE '.$filter.';':';');
+    $query = 'DELETE FROM '.$table.( $filter!==false ? ' '.$filter.';':';');
     return self::execute( $query );
   }
 

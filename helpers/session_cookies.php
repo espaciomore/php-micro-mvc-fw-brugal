@@ -19,7 +19,9 @@ class Session_Cookies implements ISession {
     if ( !static::exists() ){
       return false;
     }
-    $cookie = \Helpers\Convertion::toStdClass($_COOKIE['stateless_session']);
+    $object_data= json_decode( $_COOKIE['stateless_session'] );
+    $json_str = \Helpers\Convertion::decode_user_data( $object_data->{'data'} );
+    $cookie = \Helpers\Convertion::toStdClass( $json_str );
     $expired = isset($cookie->timeout) && (time() < \Helpers\Convertion::time_decode($cookie->timeout));
     
     return $expired;
@@ -30,7 +32,8 @@ class Session_Cookies implements ISession {
    * @return boolean
    */
   public static function exists(){
-    return isset($_REQUEST['stateless_session']);
+    $cookie= $_COOKIE;
+    return isset($cookie['stateless_session']);
   }
 
   /**
@@ -38,7 +41,7 @@ class Session_Cookies implements ISession {
    * @return array
    */
   public static function get_session(){
-    return $_COOKIE['stateless_session'];
+    return $_SESSION['stateless_session'];
   }
 
   /**
@@ -49,17 +52,9 @@ class Session_Cookies implements ISession {
   public static function log_in( $user ){
     if( isset($_SESSION['stateless_session']['user_email']) && $_SESSION['stateless_session']['user_email']!==$user->email ){
       return false;
-    }    
-    $params = array();
-    foreach ($_SESSION['stateless_session'] as $key => $value) {
-      $params[$key] = $value;
     }
-    $user->timeout = \Helpers\Convertion::time_encode(''.(time()+7200));
-    foreach ($user as $key => $value) {
-      $params[$key] = $value;
-    }
-    setcookie( 'stateless_session', 
-          \Helpers\Convertion::toJSon( $params ) );
+    $_SESSION['stateless_session']['timeout'] = \Helpers\Convertion::time_encode(''.(time()+43200));
+    $_SESSION['stateless_session']['user_email'] = $user->email;
     return true;
   }
 
@@ -71,9 +66,7 @@ class Session_Cookies implements ISession {
     $timeout = (time()-60);
     $expired = \Helpers\Convertion::time_encode(''.$timeout);
     unset($_SESSION['stateless_session']);
-    $_SESSION['stateless_session'] = array('timeout' => $expired);    
-    setcookie( 'stateless_session',  
-          \Helpers\Convertion::toJSon(array('timeout' => $expired)), $timeout );
+    $_SESSION['stateless_session']= array('timeout' => $expired);    
     return true;
   }
 
@@ -83,12 +76,14 @@ class Session_Cookies implements ISession {
    */
   public static function load_session(){
     if(!static::exists()){
-      $_SESSION['stateless_session'] = array();
+      $_SESSION['stateless_session']= array();
       return $_SESSION['stateless_session'];
     }
-    $cookie = $_COOKIE['stateless_session'];
+    $object_data= json_decode($_COOKIE['stateless_session']);
+    $json_str= \Helpers\Convertion::decode_user_data( $object_data->{'data'} );
+    $cookie= \Helpers\Convertion::toStdClass( $json_str );
     foreach ($cookie as $key => $value) {
-      $_SESSION['stateless_session'][$key] = $value;
+      $_SESSION['stateless_session'][$key]= $value;
     }
     return $_SESSION['stateless_session'];
   }
@@ -99,13 +94,10 @@ class Session_Cookies implements ISession {
    * @return boolean
    */
   public static function save_session( $page='' ){
-    $params = array();
-    $params['timeout'] = \Helpers\Convertion::time_encode(''.(time()+7200));
-    foreach ($_SESSION['stateless_session'] as $key => $value) {
-      $params[$key] = $value;
-    }
+    $_SESSION['stateless_session']['timeout']= \Helpers\Convertion::time_encode(''.(time()+43200));
+    $user_data= \Helpers\Convertion::encode_user_data( $_SESSION['stateless_session'] );
     setcookie( 'stateless_session', 
-          \Helpers\Convertion::toJSon( $params ) );   
+      \Helpers\Convertion::toJSon(array("data"=> $user_data)), time()+43200,'/' );   
     return $page;
   }
 
@@ -116,9 +108,13 @@ class Session_Cookies implements ISession {
    */
   public static function update_session( $data ){
     foreach ($data as $key => $value) {
-      $_SESSION['stateless_session'][$key] = $value;
+      if ($value) {
+        $_SESSION['stateless_session'][$key] = $value;
+      } else {
+        unset($_SESSION['stateless_session'][$key]);
+      }
     }
-    $_SESSION['stateless_session']['timeout'] = \Helpers\Convertion::time_encode(''.(time()+7200));
+    $_SESSION['stateless_session']['timeout'] = \Helpers\Convertion::time_encode(''.(time()+43200));
     return $_SESSION['stateless_session'];
   }  
 }

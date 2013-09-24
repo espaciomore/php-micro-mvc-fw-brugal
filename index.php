@@ -27,11 +27,11 @@ spl_autoload_register('__autoload');
 function requested_content() {
   try{
     // Load proper environment configurations
-    \Configs\Dev::setup();
+    \Configs\Local::setup();
     \Helpers\Routing::init();
     $page = \Helpers\Routing::get_content();
   } catch (\Exception $e){
-    \Configs\Dev::teardown();
+    \Configs\Local::teardown();
   }
   return $page ? $page:'';
 } //

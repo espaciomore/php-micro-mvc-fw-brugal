@@ -90,6 +90,15 @@ abstract class Request_Service {
   }
 
   /**
+   * get_requested_uri Function for getting the questested / redirect uri
+   * @return array
+   */
+  public static function get_requested_uri(){
+    $requested_uri= static::get_server_name().(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI']:'');
+    return $requested_uri;
+  } 
+  
+  /**
    * get_server_name Function for retrieving the requested server name.
    * @return string
    */

@@ -1,7 +1,4 @@
-<?php /* This file only contains copy of the environment configuration object */
-
-  include(dirname(__FILE__).'/local.php');  
-?>
+<?php 
 
 namespace Configs;
 

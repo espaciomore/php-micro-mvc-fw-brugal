@@ -61,20 +61,29 @@ abstract class Convertion {
   } 
 
   /**
-   * param_encode Function for getting the encoded http equivalent.
+   * url_encode Function for getting the encoded http equivalent.
    * @param string $param
    * @return string
    */
-  public static function param_encode( $param ){
+  public static function url_encode( $param ){
+    $param= preg_replace( '/[^0-9a-zA-Z-\s]*/','',$param );
+    $param= preg_replace( '/\s{1,}/','-',$param );
+    $param= preg_replace( '/^-{1}/','',$param );
+    $param= preg_replace( '/-{1}$/','',$param );
+    $param= preg_replace( '/-{1,}/','-',$param );
+    $param= strtolower($param);
+    $param= static::entity_escaping_encode( $param );    
     return urlencode( $param );
   }
 
   /**
-   * param_decode Function for getting the real characters from http equivalent.
+   * url_decode Function for getting the real characters from http equivalent.
    * @param string $param
    * @return string
    */
-  public static function param_decode( $param ){
+  public static function url_decode( $param ){
+    $param= str_replace('-',' ',$param);
+    $param= static::entity_escaping_decode( $param );
     return urldecode( $param );
   }
 
@@ -143,4 +152,31 @@ abstract class Convertion {
     return str_replace( hash('md5','stateless_session'), '', $params_plus_key);
   } 
 
+  /**
+   * entity_escaping_encode Function for escaping entity charater on URLs mostly
+   * @param string $param
+   * @return string
+   */
+  public static function entity_escaping_encode( $param ){
+    $param= str_replace(
+      array('&','\'','"','>','<','%','/',),
+      array('&amp;','&apos;','&quot;','&gt;','&lt;','&#37;','&#47;',), 
+      $param
+    );
+    return $param;
+  }
+
+  /**
+   * entity_escaping_encode Function for escaping entity charater on URLs mostly
+   * @param string $param
+   * @return string
+   */
+  public static function entity_escaping_decode( $param ){
+    $param= str_replace(
+      array('&amp;','&apos;','&quot;','&gt;','&lt;','&#37;','&#47;',), 
+      array('&','\'','"','>','<','%','/',),
+      $param
+    );
+    return $param;
+  }  
 }

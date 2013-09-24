@@ -19,7 +19,7 @@ class Session_Stateless implements ISession {
       return false;
     }
     $json_str = \Helpers\Convertion::decode_user_data($_REQUEST['stateless_session']);
-    $session = \Helpers\Convertion::toStdClass( $json_str );
+    $session = json_decode( $json_str );
     $expired = isset($session->timeout) && (time() < \Helpers\Convertion::time_decode($session->timeout));
     
     return $expired;
@@ -63,7 +63,7 @@ class Session_Stateless implements ISession {
     $timeout = (time()-60);
     $expired = \Helpers\Convertion::time_encode(''.$timeout);
     unset($_SESSION['stateless_session']);
-    $_SESSION['stateless_session'] = array('timeout' => $expired);
+    $_SESSION['stateless_session']= array('timeout' => $expired);
     return true;
   }
 
@@ -76,8 +76,8 @@ class Session_Stateless implements ISession {
       $_SESSION['stateless_session'] = array();
       return $_SESSION['stateless_session'];
     }
-    $json_str = \Helpers\Convertion::decode_user_data($_REQUEST['stateless_session']);
-    $session = \Helpers\Convertion::toStdClass( $json_str );    
+    $json_str= \Helpers\Convertion::decode_user_data($_REQUEST['stateless_session']);
+    $session= \Helpers\Convertion::toStdClass( $json_str );    
     foreach ($session as $key => $value) {
       $_SESSION['stateless_session'][$key] = $value;
     }
@@ -91,9 +91,9 @@ class Session_Stateless implements ISession {
    * @return boolean
    */
   public static function save_session( $page='' ){
-    $_SESSION['stateless_session']['timeout'] = \Helpers\Convertion::time_encode(''.(time()+7200));
-    $user_data = \Helpers\Convertion::encode_user_data( $_SESSION['stateless_session'] );
-    $page = str_replace('value="stateless_session"', "value=\"{$user_data}\"", $page); 
+    $_SESSION['stateless_session']['timeout']= \Helpers\Convertion::time_encode(''.(time()+7200));
+    $user_data= \Helpers\Convertion::encode_user_data( $_SESSION['stateless_session'] );
+    $page= str_replace('value="stateless_session"', "value=\"{$user_data}\"", $page); 
 
     return $page!=='' ? $page:true;
   }

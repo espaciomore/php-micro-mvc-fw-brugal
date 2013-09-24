@@ -32,7 +32,7 @@ abstract class IMAP {
    * @return boolean
    */
   protected static function connect(){
-    static::$imap= imap_open(
+    static::$imap= @imap_open(
       static::$config['mailbox'], 
       static::$config['username'], 
       static::$config['password']
@@ -47,7 +47,7 @@ abstract class IMAP {
   protected static function disconnect(){
     if( !static::$imap )
       return false;
-    return imap_close( static::$imap );
+    return @imap_close( static::$imap );
   }
 
   /**
@@ -56,7 +56,7 @@ abstract class IMAP {
    * @return array
    */
   protected static function imap_search_mails( $criteria ){
-    static::$mails= imap_search( static::$imap,$criteria );
+    static::$mails= @imap_search( static::$imap,$criteria );
   }
 
   /**
@@ -67,7 +67,7 @@ abstract class IMAP {
   protected static function fetch_overview( $sequence ){
     if( !static::$imap )
       return false;
-    $result= imap_fetch_overview( static::$imap,$sequence );
+    $result= @imap_fetch_overview( static::$imap,$sequence );
     return $result;
   }
 
@@ -78,20 +78,19 @@ abstract class IMAP {
    */ 
   protected static function fetch_body( $msg_number ){
     // TEXT / HTML
-    $type_msg= imap_fetchbody( static::$imap,$msg_number,1.2 );
+    $type_msg= @imap_fetchbody( static::$imap,$msg_number,1.2 );
     if( $type_msg==='' ){
       // TEXT / PLAIN
-      $type_msg= imap_fetchbody( static::$imap,$msg_number,1.1 );
+      $type_msg= @imap_fetchbody( static::$imap,$msg_number,1.1 );
       if( $type_msg==='' ){
         // body-text
-        $type_msg= imap_fetchbody( static::$imap,$msg_number,1.0 );
+        $type_msg= @imap_fetchbody( static::$imap,$msg_number,1.0 );
       }      
     }
-    if ( $msg=base64_decode($type_msg,true) ){
+    if ( $msg= @base64_decode($type_msg,true) ){
       $type_msg= $msg;
     }
-    $content= quoted_printable_decode($type_msg);
-    $content= urldecode($content);
+    $content= $type_msg;
 
     return $content;
   }

@@ -66,13 +66,16 @@ abstract class Database {
       return mysqli_store_result( static::$db );
     } else if( (bool)preg_match('/^DELETE.*/i', $query) ){
       return mysqli_store_result( static::$db );
+    } else if( (bool)preg_match('/^SELECT.*/i', $query) ){
+      // continue;
     }
     // convert results into json format
     $rows = array();
     if( gettype($result)!=="boolean" ){
-      while($row= mysqli_fetch_assoc($result))
+      while($row= mysqli_fetch_assoc($result)){
         $rows[]= $row;
-      return empty($rows) ? false:json_encode($rows);
+      }
+      return empty($rows) ? false:( $rows );
     }
 
     return $result;

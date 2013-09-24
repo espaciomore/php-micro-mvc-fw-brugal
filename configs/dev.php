@@ -1,14 +1,17 @@
-<?php 
+<?php /* This file only contains copy of the environment configuration object */
+
+  include(dirname(__FILE__).'/local.php');  
+?>
 
 namespace Configs;
 
 /**
- * Dev Class contains the necessary configuration for development.
+ * Local Class contains the necessary configuration for development.
  *
  * By exposing the method within this class, one can import settings
  * that would be needed in the development environment.
  */
-abstract class Dev {
+abstract class Local {
 
   /**
    * @var array $messages : contains some information to be displayed.
