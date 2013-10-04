@@ -32,11 +32,17 @@ abstract class IMAP {
    * @return boolean
    */
   protected static function connect(){
-    static::$imap= @imap_open(
-      static::$config['mailbox'], 
-      static::$config['username'], 
-      static::$config['password']
+    $connect= function($config){
+      set_time_limit(60);
+      $imap= @imap_open(
+        $config['mailbox'], 
+        $config['username'], 
+        $config['password']
       );
+      return $imap;
+    };
+    static::$imap= $connect( static::$config );
+
     return static::$imap ? true:false;
   }
 
@@ -47,46 +53,75 @@ abstract class IMAP {
   protected static function disconnect(){
     if( !static::$imap )
       return false;
-    return @imap_close( static::$imap );
+    $close= function($imap){
+      set_time_limit(60);
+      $close= @imap_close($imap);
+      return $close;
+    };
+    return $close(static::$imap);
   }
 
   /**
    * imap_search_mails Function for retreiving mails from mailbox.
    * @param string $criteria
-   * @return array
+   * @return boolean
    */
-  protected static function imap_search_mails( $criteria ){
-    static::$mails= @imap_search( static::$imap,$criteria );
+  protected static function imap_search_mails( $criteria,$option=SE_UID ){
+    $search= function($imap,$criteria,$option){
+      set_time_limit(60);
+      $search= @imap_search( $imap,$criteria,$option );
+      return $search;
+    };
+    static::$mails= $search( static::$imap,$criteria,$option );
+    return static::$mails ? true : false; 
   }
 
   /**
    * fetch_overview Function for fetching mail from mailbox.
-   * @param string $sequence
+   * @param int $uid
    * @return array
    */
-  protected static function fetch_overview( $sequence ){
+  protected static function fetch_overview( $uid,$option=FT_UID ){
     if( !static::$imap )
       return false;
-    $result= @imap_fetch_overview( static::$imap,$sequence );
+    $fetch= function($imap,$uid,$option){
+      set_time_limit(60);
+      $fetch= @imap_fetch_overview( $imap,$uid,$option );
+      return $fetch;
+    };
+    $result= $fetch( static::$imap,$uid,$option );
+    return $result;
+  }
+
+  /**
+   * fetch_header Function for fetching mail from mailbox.
+   * @param int $uid
+   * @return array
+   */
+  protected static function fetch_header( $uid,$option=FT_UID ){
+    if( !static::$imap )
+      return false;
+    $fetch= function($imap,$uid,$option){
+      set_time_limit(60);
+      $fetch= @imap_fetchheader( $imap,$uid,$option );
+      return $fetch;
+    };
+    $result= $fetch( static::$imap,$uid,$option );
     return $result;
   }
 
   /**
    * fetch_body Function for fetching mail content and decoding properly.
-   * @param object $msg_number
+   * @param int $uid
    * @return string
    */ 
-  protected static function fetch_body( $msg_number ){
-    // TEXT / HTML
-    $type_msg= @imap_fetchbody( static::$imap,$msg_number,1.2 );
-    if( $type_msg==='' ){
-      // TEXT / PLAIN
-      $type_msg= @imap_fetchbody( static::$imap,$msg_number,1.1 );
-      if( $type_msg==='' ){
-        // body-text
-        $type_msg= @imap_fetchbody( static::$imap,$msg_number,1.0 );
-      }      
-    }
+  protected static function fetch_body( $uid,$type,$option=FT_UID ){
+    $body= function($imap,$uid,$type,$option){
+      set_time_limit(60);
+      $body= @imap_fetchbody( $imap,$uid,$type,$option );
+      return $body;
+    };
+    $type_msg= $body( static::$imap,$uid,$type,$option );
     if ( $msg= @base64_decode($type_msg,true) ){
       $type_msg= $msg;
     }

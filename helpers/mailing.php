@@ -10,6 +10,13 @@ namespace Helpers;
  */
 class Mailing extends IMAP {
 
+  private $map= array(
+    'text/html'=> 1.2,
+    'text/plain'=> 1.1,
+    'multipart/alternative'=> 1.2,
+    'multipart/related'=> 1.2,
+    'multipart/mixed'=> 1.2,
+  );
   /**
    * __construct Function instance contructor.
    * @param array $config
@@ -30,75 +37,111 @@ class Mailing extends IMAP {
     if( !self::connect() ){
       return false;
     }
-    // get email from inbox
-    self::imap_search_mails( $filter );
     // strip the email content
     $updates = array();
-    foreach( self::$mails as $mail ){
-      $mail_details= self::fetch_overview( $mail );
-      $info= array(
-        'content'=> '\''.$this->get_content( $mail ).'\'',
-        'sent_date'=> '\''.$this->get_date( $mail_details[0]->{'date'} ).'\'',
-        'subject'=> '\''.$this->get_subject( $mail_details[0]->{'subject'} ).'\'',
-        'sender_name'=> '\''.$this->get_sender_name( $mail_details[0]->{'from'} ).'\'',
-        'sender_email'=> '\''.$this->get_sender_email( $mail_details[0]->{'from'} ).'\'',
-      );
-      $updates[]= $info;
+    if( self::imap_search_mails( $filter ) ){
+      foreach( self::$mails as $uid ){
+        //
+        $header_text= self::fetch_header( $uid );
+        $header= @imap_rfc822_parse_headers($header_text);
+        //
+        preg_match('/content-type:\s([\/\w]+)/i', $header_text,$content_type );
+        if( !$content_type ){
+          $type= 1.0;
+        } else {
+          $type= $this->map[ strtolower($content_type[1]) ];
+        }  
+        $content= self::fetch_body( $uid, $type ? $type : 1.0 );
+        //
+        $info= array(
+          'uid'=> $uid,
+          'header'=> $this->get_header( $header_text ),
+          'content'=> $this->get_content( $content ),
+          'sent_date'=> $this->get_date( $header ),
+          'subject'=> $this->get_subject( $header ),
+          'sender_name'=> $this->get_sender_name( $header ),
+          'sender_email'=> $this->get_sender_email( $header ),
+        );
+        $updates[]= $info;
+      }
     }
     // close connection to imap server
     self::disconnect();
 
-    return $updates;
+    return empty($updates) ? false : $updates;
+  }
+
+  /**
+   * get_header Function for decoding the mail header.
+   * @param string $header
+   * @return string
+   */  
+  private function get_header( $header ){
+    return self::escape_param( $header );
   }
 
   /**
    * get_content Function for decoding the mail content.
-   * @param object $mail
+   * @param string $content
    * @return string
    */  
-  private function get_content( $mail ){
-    $content= self::fetch_body( $mail );
+  private function get_content( $content ){
     return self::escape_param( $content );
   }
 
   /**
    * get_subject Function for decoding the mail subject.
-   * @param object $subject
+   * @param object $header
    * @return string
    */  
-  private function get_subject( $subject ){
+  private function get_subject( $header ){
+    if( isset($header->{'subject'}) ){
+      $subject= $header->{'subject'};
+    } else if( isset($header->{'Subject'}) ){
+      $subject= $header->{'Subject'};
+    } else {
+      $subject= '';
+    }
     return self::escape_param( $subject );
   }
 
   /**
    * get_date Function for decoding the mail date.
-   * @param string $date
+   * @param object $header
    * @param string $format
    * @return string
    */  
-  private function get_date( $date,$format='Y-m-d H:i:s' ){
-    $sent_date= new \DateTime( $date ); 
-    $sent_date= $sent_date->format( $format );   
+  private function get_date( $header,$format='Y-m-d H:i:s' ){
+    if( isset($header->{'date'}) ){
+      $date= $header->{'date'};
+    } else if( isset($header->{'Date'}) ){
+      $date= $header->{'Date'};
+    } else {
+      $date= '0000-00-00';
+    }
+    $sent_date= date( $format,strtotime( $date ) );
     return self::escape_param( $sent_date );
   }
 
   /**
    * get_sender_name Function for decoding the mail sender name.
-   * @param string $from
+   * @param object $header
    * @return string
    */  
-  private function get_sender_name( $from ){
-    $name= trim(preg_replace('/(<.*>)+/', '', $from ));
+  private function get_sender_name( $header ){
+    $from= $header->{'sender'};
+    $name= isset($from[0]->{'personal'}) ? $from[0]->{'personal'} : '';
     return self::escape_param( $name );
   }
 
   /**
    * get_sender_email Function for decoding the mail sender email.
-   * @param string $from
+   * @param object $header
    * @return string
    */  
-  private function get_sender_email( $from ){
-    $email= preg_replace('/[<>]+/','',preg_replace('/^.*\\s/', '', $from ));
+  private function get_sender_email( $header ){
+    $from= $header->{'sender'};
+    $email= $from[0]->{'mailbox'}.'@'.$from[0]->{'host'};
     return self::escape_param( $email );
   }
 
