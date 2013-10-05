@@ -13,7 +13,7 @@ Dependencies:
 - interpreter (php5)
 - others as needed (imap,gearman,redis)
 
-Then, open your browser and point to you app url, you should see the base site loaded right away.
+Then, open your browser and point to your app url, you should see the base site loaded right away.
 
 Notes
 =====
