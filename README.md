@@ -6,9 +6,14 @@ Just another not so micro PHP CMV framework for quick web development.
 Jump Start
 ==========
 
-git clone https://github.com/espaciomore/php-micro-mvc-fw-brugal.git
+> git clone https://github.com/espaciomore/php-micro-mvc-fw-brugal.git
 
-open your browser, you should see the base scheme loaded right away.
+Dependencies:
+- web-server (apache2)
+- interpreter (php5)
+- others as needed (imap,gearman,redis)
+
+Then, open your browser and point to you app url, you should see the base site loaded right away.
 
 Notes
 =====
